@@ -1,0 +1,173 @@
+
+function Get-File-Exists-On-Path
+{
+    param(
+        [string]$file
+    )
+    $results = ($Env:Path).Split(";") | Get-ChildItem -filter $file -erroraction silentlycontinue
+    $found = ($results -ne $null)
+    return $found
+}
+
+function Get-Git-Commit
+{
+    if ((Get-File-Exists-On-Path "git.exe")){
+        $gitLog = git log --oneline -1
+        return $gitLog.Split(' ')[0]
+    }
+    else {
+        return "0000000"
+    }
+}
+
+function ilmerge($key, $directory, $name, $assemblies, $extension)
+{    
+    # Create a new temp directory as we cannot overwrite the main assembly being merged.
+    new-item -path $directory -name "temp_merge" -type directory -ErrorAction SilentlyContinue
+    
+    # Unfortuntately we need to tell ILMerge its merging CLR 4 assemblies.
+    if($framework -eq "4.0")
+    {
+        Exec { tools\ilmerge\ilmerge.exe /keyfile:$key /out:"$directory\temp_merge\$name.$extension" "$directory\$name.$extension" $assemblies /targetplatform:"v4,$env:ProgramFiles\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0" }
+    }
+    else
+    {
+        Exec { tools\ilmerge\ilmerge.exe /keyfile:$key /out:"$directory\temp_merge\$name.$extension" "$directory\$name.$extension" $assemblies }
+    }
+    
+    Get-ChildItem "$directory\temp_merge\**" -Include *.dll, *.pdb | Copy-Item -Destination $directory
+    Remove-Item "$directory\temp_merge" -Recurse -ErrorAction SilentlyContinue
+}
+
+function Get-Version-From-Git-Tag
+{
+  $gitTag = git describe --tags --abbrev=0
+  return $gitTag.Replace("v", "") + ".0"
+}
+
+function Verify-Net-45-Installed {
+
+    if( (ls "$env:windir\Microsoft.NET\Framework\v4.0*") -eq $null ) {
+        throw ".Net 4.0 install directory cannot be found on windows path"
+    }
+
+    $version = (get-itemproperty 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full').Version
+    if(! $version.StartsWith("4.5")) {
+        throw ".NET 4.5 not found in registry"
+    }
+}
+
+function Set-ConfigAppSetting
+    ([string]$PathToConfig=$(throw 'Configuration file is required'),
+         [string]$Key = $(throw 'No Key Specified'), 
+         [string]$Value = $(throw 'No Value Specified'),
+         [Switch]$Verbose,
+         [Switch]$Confirm,
+         [Switch]$Whatif)
+{
+    $AllAnswer = $null
+    if (Test-Path $PathToConfig)
+    {
+        Write-Host "updating $Key in config $PathToConfig "
+        $x = [xml] (type $PathToConfig)
+ 
+            $node = $x.configuration.SelectSingleNode("appSettings/add[@key='$Key']")
+            $node.value = $Value
+            $newXml = Format-Xml $x
+            Set-Content $PathToConfig $newXml
+    }
+} 
+
+function Format-XML ([xml]$xml, $indent=2) 
+{ 
+    $StringWriter = New-Object System.IO.StringWriter 
+    $XmlWriter = New-Object System.XMl.XmlTextWriter $StringWriter 
+    $xmlWriter.Formatting = "indented" 
+    $xmlWriter.Indentation = $Indent 
+    $xml.WriteContentTo($XmlWriter) 
+    $XmlWriter.Flush() 
+    $StringWriter.Flush() 
+    $result =  $StringWriter.ToString() 
+    return $result
+}
+
+function Get-ConfigAppSetting
+([string]$PathToConfig=$(throw 'Configuration file is required'))
+{
+    if (Test-Path $PathToConfig)
+    {
+        $x = [xml] (type $PathToConfig)
+        $x.configuration.appSettings.add
+    }
+    else
+    {
+        throw "Configuration File $PathToConfig Not Found"
+    }
+}
+
+function Roundhouse-Kick-Database 
+([string]$DatabaseName=$(throw 'DatabaseName is required'),
+ [string]$TargetServer=$(throw 'TargetServer is required'),
+ [string]$Environment=$(throw 'Environment is required'),
+ [bool]$UseSqlAuthentication=$false,
+ [string]$LoginUser="",
+ [string]$LoginPassword="",
+ [bool]$DropCreate=$true,
+ [bool]$RestorefromBackup=$false,
+ [string]$BackupFile="")
+{ 
+    $SqlFilesDirectory = "$DatabaseName.Database"
+    $RepositoryPath="$/SAIGPS Team Project/SAIGPS/Trunk"
+
+    $args = @()
+
+    if($RestorefromBackup -eq $true) {
+        $args += @("--restore",
+        "--restoretimeout=9000",
+        "--commandtimeoutadmin=9000",
+        "--restorefrom=$BackupFile")
+    }
+
+    if($UseSqlAuthentication -eq $true) {
+        $args += @("--connectionstring=server=$TargetServer;database=$DatabaseName;uid=$LoginUser;pwd=$LoginPassword")
+    }
+
+
+
+
+
+    if($DropCreate -eq $true) {
+        exec { roundhouse\console\rh.exe --servername=$TargetServer --database=$DatabaseName --noninteractive --drop }
+    }
+
+
+    exec { roundhouse\console\rh.exe --servername=$TargetServer --database=$DatabaseName --environment=$Environment --sqlfilesdirectory=$SqlFilesDirectory --repositorypath=$RepositoryPath --upfolder="2.Tables and Data (MODIFICATIONS WILL REQUIRE DATABASE REFRESH)" --runfirstafterupdatefolder="3.Synonyms (MODIFICATIONS WILL REQUIRE DATABASE REFRESH)" --functionsfolder="4.Functions (DROP CREATE)" --viewsfolder="5.Views (DROP CREATE)" --sprocsfolder="6.Stored Procedures (DROP CREATE)" --indexesfolder="7.Indexes (DROP CREATE)" --runafterotheranytimescriptsfolder="8.Environment Configuration Data" --permissionsfolder="9.SQL Server Permissions" --noninteractive --commandtimeout=1200 $args }
+}
+
+
+function Install-Nuget-Packages([string]$packages_dir=$(throw 'Target packages directory is required')) { 
+    $nuget_exe = '.nuget\nuget.exe'
+
+    if( (Test-Path $nuget_exe) -eq $false ) {
+        throw "nuget.exe cannot be found on path"
+    }
+
+    $configs = Get-ChildItem -filter "packages.config" -recurse
+    
+
+    foreach($config in $configs)
+    {
+        $fullname = $config.fullname
+
+        exec { & $nuget_exe install "$fullname" -o  "$packages_dir" }
+    }
+}
+
+function Generate-Environment-Config([string]$config=$(throw 'Config path is required'),
+    [string]$applicationName=$(throw 'application name is required'),
+    [string]$environmentName=$(throw 'environment name is required')) 
+{
+    
+}
+
+
