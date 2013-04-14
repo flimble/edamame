@@ -209,3 +209,92 @@ function Update-AllAssemblyInfoFiles ([string] $sourcePath,  [string] $assemblyi
 
   cd $oldDir
 }
+
+
+
+function copy-assemblies-only($source, $targetDir) { 
+
+    write-host "copying assemblies from $source to $targetDir"
+    new-item $targetDir -itemType Directory -ErrorAction SilentlyContinue | out-null
+
+    Copy-Item $source -Recurse -include @("*.dll","*.exe") -Destination $targetDir  
+}
+
+function xcopy-directory-with-contents($source, $exclusions, $targetDir, [bool]$removeEmptyFolders) {
+    $tempfile = [IO.Path]::GetTempFileName()
+
+    if($exclusions) {
+        Set-Content $tempfile ([System.String]::Join("`r`n", $exclusions))
+        gc $tempfile
+    }
+
+    write-host "copying files from $source to $targetDir"
+
+    &xcopy $source $targetDir /EXCLUDE:$tempfile /e  | out-null
+    remove-item $tempfile
+
+    if($removeEmptyFolders) {Remove-EmptyFolders $targetDir}
+}
+
+
+function Remove-EmptyFolders { 
+ [CmdletBinding()] 
+  param ($Path='.\') 
+   
+$delDirs = @() 
+$dirs = Get-ChildItem -Path $Path -Recurse | Where-Object { ($_.PsIsContainer) } 
+foreach ($dir in $dirs) { 
+    $l = 0 
+    $files = Get-ChildItem $dir.PSPath -Recurse | Where-Object { (!($_.PsIsContainer)) } 
+    foreach ($file in $files) { 
+        $l += $file.length 
+        } # end foreach $file 
+    if ($l -eq 0) { 
+        Write-Verbose "$($dir.pspath | split-path -noqualifier) has no files"  
+        $delDirs += $dir.PSPath 
+        } # end if 
+    } # end foreach $dir 
+ 
+if ($delDirs) { 
+    Write-Host "The following empty directories will be removed." 
+    $delDirs | ForEach-Object { Split-Path $_ -NoQualifier } 
+    
+        $delDirs | Remove-Item -Recurse -ErrorAction SilentlyContinue -Force  
+        Write-Host "$($delDirs.count) directories deleted" 
+    } # end if 
+else {Write-Host "No empty folders were found"} 
+} # end function
+
+
+function OutputNunitTestSummaryToConsole($results_xml, $nunitsummary_path) { 
+    if(!(test-path $results_xml)) { throw "no test results found to report at $results_xml"}
+    if(!(test-path $results_xml)) { throw "cannot find nunit-summary at $nunitsummary_path"}
+
+
+    exec { &"$nunitsummary_path" $results_xml -noheader -brief }
+
+    [xml]$xml = get-content $results_xml
+
+    $testfailures = $xml | select-xml -xpath '//test-case' | where-object { $_.Node.success -eq "False"} 
+    
+    foreach($failure in $testfailures) { 
+        write-host
+
+        write-host "Error Name: " -foregroundcolor darkred
+        write-host $failure.Node.name -foregroundcolor red
+        write-host
+        write-host "Error Description: " -foregroundcolor darkred       
+        write-host $failure.Node.description -foregroundcolor red
+
+        foreach($child in $failure.Node.ChildNodes) {
+            if($child.Name -eq "failure") { 
+                foreach($nestedChild in $child.ChildNodes) {
+                    if($nestedChild.Name -eq "message") { 
+                        Write-Host $nestedChild.InnerXml -foregroundcolor red
+                    }
+                }
+            }   
+        }   
+    }   
+    $xml = $null   
+}
