@@ -147,7 +147,8 @@ function Shrink-SqlDatabase([string] $InstanceName, [string] $DatabaseName, [int
       $server = Get-Server $instancename $username $password
 
       $database = $server.Databases[$DatabaseName]
-
+      
+      Write-Host "found database: $dastabase and starting shrink using Microsoft.SqlServer.Management.Smo.ShrinkMethod:Default"
       $database.Shrink($percentFree,
         [Microsoft.SqlServer.Management.Smo.ShrinkMethod]::Default)
   }
