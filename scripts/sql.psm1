@@ -148,9 +148,15 @@ function Shrink-SqlDatabase([string] $InstanceName, [string] $DatabaseName, [int
 
       $database = $server.Databases[$DatabaseName]
       
-      Write-Host "found database: $dastabase and starting shrink using Microsoft.SqlServer.Management.Smo.ShrinkMethod:Default"
+      Write-Host "found database: $database and starting shrink using Microsoft.SqlServer.Management.Smo.ShrinkMethod:Default leaving '$percentFree' percent free."
       $database.Shrink($percentFree,
         [Microsoft.SqlServer.Management.Smo.ShrinkMethod]::Default)
+  }
+  catch { 
+    $message = $_.Exception.GetBaseException().Message
+    Write-Host $_.Exception
+    Write-Host $_.Exception.GetBaseException()
+    throw $message  
   }
   finally
   {
