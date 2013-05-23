@@ -105,6 +105,41 @@ function Get-ConfigAppSetting
     }
 }
 
+function Get-ConfigConnectionString
+([string]$PathToConfig=$(throw 'Configuration file is required'))
+{
+    if (Test-Path $PathToConfig)
+    {
+        $x = [xml] (type $PathToConfig)
+        $x.configuration.connectionStrings.add
+    }
+    else
+    {
+        throw "Configuration File $PathToConfig Not Found"
+    }
+}
+
+
+function Set-ConfigConnectionString
+    ([string]$PathToConfig=$(throw 'Configuration file is required'),
+         [string]$Key = $(throw 'No Key Specified'), 
+         [string]$ConnectionString = $(throw 'No Value Specified'),
+         [Switch]$Verbose,
+         [Switch]$Confirm,
+         [Switch]$Whatif)
+{
+    if (Test-Path $PathToConfig)
+    {
+        Write-Host "updating $Key in config $PathToConfig "
+        $x = [xml] (type $PathToConfig)
+ 
+            $node = $x.configuration.SelectSingleNode("connectionStrings/add[@name='$Key']")
+            $node.connectionString = $ConnectionString
+            $newXml = Format-Xml $x
+            Set-Content $PathToConfig $newXml
+    }
+} 
+
 function Roundhouse-Kick-Database 
 ([string]$DatabaseName=$(throw 'DatabaseName is required'),
  [string]$TargetServer=$(throw 'TargetServer is required'),
