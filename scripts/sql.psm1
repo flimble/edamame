@@ -145,6 +145,7 @@ function Shrink-SqlDatabase([string] $InstanceName, [string] $DatabaseName, [int
 
   try { 
       $server = Get-Server $instancename $username $password
+      $server.ConnectionContext.StatementTimeout = 65534
 
       $database = $server.Databases[$DatabaseName]
       
