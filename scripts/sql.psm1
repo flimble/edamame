@@ -145,11 +145,12 @@ function Shrink-SqlDatabase([string] $InstanceName, [string] $DatabaseName, [int
 
   try { 
       $server = Get-Server $instancename $username $password
-      $server.ConnectionContext.StatementTimeout = 65534
+      $server.ConnectionContext.StatementTimeout = 7200
+      $server.ConnectionContext.ConnectTimeout = 300
 
       $database = $server.Databases[$DatabaseName]
       
-      Write-Host "found database: $database and starting shrink using Microsoft.SqlServer.Management.Smo.ShrinkMethod:Default leaving '$percentFree' percent free."
+      Write-Host "found database: $database and starting shrink using Microsoft.SqlServer.Management.Smo.ShrinkMethod:TruncateOnly leaving '$percentFree' percent free."
       $database.Shrink($percentFree,
         [Microsoft.SqlServer.Management.Smo.ShrinkMethod]::Default)
   }
