@@ -153,12 +153,12 @@ function Roundhouse-Kick-Database
  [string]$CustomCreateScript=""
  )
 { 
-    $SqlFilesDirectory = "$DatabaseName.Database"
+     $SqlFilesDirectory = "$DatabaseName.Database"
     $RepositoryPath="$/SAIGPS Team Project/SAIGPS/Trunk"
 
     $args = @()
 
-    if($RestorefromBackup -eq $true) {
+    if($RestorefromBackup -eq $true) {        
         $args += @("--restore",
         "--restoretimeout=9000",
         "--commandtimeoutadmin=9000",
@@ -167,25 +167,18 @@ function Roundhouse-Kick-Database
 
     if($UseSqlAuthentication -eq $true) {
         $args += @("--connectionstring=server=$TargetServer;database=$DatabaseName;uid=$LoginUser;pwd=$LoginPassword")
-    }
-
-
+    } 
 
     if($DropCreate -eq $true) {
         exec { roundhouse\console\rh.exe --servername=$TargetServer --database=$DatabaseName --noninteractive --drop }
     }
 
-
-    if($CustomCreateScript) {
-        Write-Host "Using Custom Creation Script $CustomCreateScript"
-        exec { roundhouse\console\rh.exe --servername=$TargetServer --database=$DatabaseName --environment=$Environment --cds=$CustomCreateScript --sqlfilesdirectory=$SqlFilesDirectory --repositorypath=$RepositoryPath --upfolder="2.Tables and Data (MODIFICATIONS WILL REQUIRE DATABASE REFRESH)" --runfirstafterupdatefolder="3.Synonyms (MODIFICATIONS WILL REQUIRE DATABASE REFRESH)" --functionsfolder="4.Functions (DROP CREATE)" --viewsfolder="5.Views (DROP CREATE)" --sprocsfolder="6.Stored Procedures (DROP CREATE)" --indexesfolder="7.Indexes (DROP CREATE)" --runAfterOtherAnyTimeScripts="8.Environment Configuration Data" --permissionsfolder="9.SQL Server Permissions" --noninteractive --commandtimeout=1200 $args }    
-    } 
-    else {
-        exec { roundhouse\console\rh.exe --servername=$TargetServer --database=$DatabaseName --environment=$Environment --sqlfilesdirectory=$SqlFilesDirectory --repositorypath=$RepositoryPath --upfolder="2.Tables and Data (MODIFICATIONS WILL REQUIRE DATABASE REFRESH)" --runfirstafterupdatefolder="3.Synonyms (MODIFICATIONS WILL REQUIRE DATABASE REFRESH)" --functionsfolder="4.Functions (DROP CREATE)" --viewsfolder="5.Views (DROP CREATE)" --sprocsfolder="6.Stored Procedures (DROP CREATE)" --indexesfolder="7.Indexes (DROP CREATE)" --runAfterOtherAnyTimeScripts="8.Environment Configuration Data" --permissionsfolder="9.SQL Server Permissions" --noninteractive --commandtimeout=1200 $args }    
+    if($RestoreFromBackup -eq $true) {
+        exec { roundhouse\console\rh.exe --servername=$TargetServer --database=$DatabaseName --environment=$Environment --sqlfilesdirectory=$SqlFilesDirectory --repositorypath=$RepositoryPath --upfolder="2.Tables and Data (MODIFICATIONS WILL REQUIRE DATABASE REFRESH)" --runfirstafterupdatefolder="3.Synonyms (MODIFICATIONS WILL REQUIRE DATABASE REFRESH)" --functionsfolder="4.Functions (DROP CREATE)" --viewsfolder="5.Views (DROP CREATE)" --sprocsfolder="6.Stored Procedures (DROP CREATE)" --indexesfolder="7.Indexes (DROP CREATE)" --runAfterOtherAnyTimeScripts="8.Environment Configuration Data" --permissionsfolder="9.SQL Server Permissions"  --restore --restoretimeout=9000 --commandtimeoutadmin=9000 --restorefrom=$BackupFile --noninteractive --commandtimeout=1200 }
     }
-    
-
-    
+    else {
+        exec { roundhouse\console\rh.exe --servername=$TargetServer --database=$DatabaseName --environment=$Environment --sqlfilesdirectory=$SqlFilesDirectory --repositorypath=$RepositoryPath --upfolder="2.Tables and Data (MODIFICATIONS WILL REQUIRE DATABASE REFRESH)" --runfirstafterupdatefolder="3.Synonyms (MODIFICATIONS WILL REQUIRE DATABASE REFRESH)" --functionsfolder="4.Functions (DROP CREATE)" --viewsfolder="5.Views (DROP CREATE)" --sprocsfolder="6.Stored Procedures (DROP CREATE)" --indexesfolder="7.Indexes (DROP CREATE)" --runAfterOtherAnyTimeScripts="8.Environment Configuration Data" --permissionsfolder="9.SQL Server Permissions" $args --noninteractive --commandtimeout=1200 }
+    }
 }
 
 
