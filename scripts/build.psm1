@@ -220,7 +220,7 @@ function Update-SourceVersion
 
      get-content $o.FullName | 
         %{$_ -replace 'AssemblyVersion\("[0-9]+(\.([0-9]+|\*)){1,3}"\)', $NewVersion } |
-        %{$_ -replace 'AssemblyFileVersion\("[0-9]+(\.([0-9]+|\*)){1,3}"\)', $NewFileVersion }  | Set-Content $TmpFile -Encoding Unicode
+        %{$_ -replace 'AssemblyFileVersion\("[0-9]+(\.([0-9]+|\*)){1,3}"\)', $NewFileVersion }  | Set-Content $TmpFile -Encoding UTF8
 
      move-item $TmpFile $o.FullName -force
   }

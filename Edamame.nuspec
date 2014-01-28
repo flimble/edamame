@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>Edamame</id>
-    <version>1.0.0.17</version>
+    <version>1.0.0.18</version>
    <title>Edamame</title>
     <summary>Powershell build and deployment utilities</summary>
     <description>Edamame provides powershell functions for common build and deployment tasks. Designed to be used as a plugin with Psake</description>
