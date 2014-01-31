@@ -209,9 +209,10 @@ function Generate-Environment-Config([string]$config=$(throw 'Config path is req
 
 function Update-SourceVersion
 {
-  Param ([string]$Version)
+  Param ([string]$Version, [string]$InformationalVersion)
   $NewVersion = 'AssemblyVersion("' + $Version + '")';
   $NewFileVersion = 'AssemblyFileVersion("' + $Version + '")';
+  $NewInformationalVersion = 'AssemblyInformationalVersion("' + $InformationalVersion + '")';
 
   foreach ($o in $input) 
   {
@@ -220,14 +221,16 @@ function Update-SourceVersion
 
      get-content $o.FullName | 
         %{$_ -replace 'AssemblyVersion\("[0-9]+(\.([0-9]+|\*)){1,3}"\)', $NewVersion } |
-        %{$_ -replace 'AssemblyFileVersion\("[0-9]+(\.([0-9]+|\*)){1,3}"\)', $NewFileVersion }  | Set-Content $TmpFile -Encoding UTF8
+        %{$_ -replace 'AssemblyFileVersion\("[0-9]+(\.([0-9]+|\*)){1,3}"\)', $NewFileVersion }  |
+        %{$_ -replace 'AssemblyInformationalVersion\(".*?"\)', $NewInformationalVersion } |
+        Set-Content $TmpFile -Encoding UTF8
 
      move-item $TmpFile $o.FullName -force
   }
 }
 
 
-function Update-AllAssemblyInfoFiles ([string] $sourcePath,  [string] $assemblyinfo_version)
+function Update-AllAssemblyInfoFiles ([string] $sourcePath,  [string] $assemblyinfo_version, [string] $assemblyinfo_informationalversion)
 {
     $r= [System.Text.RegularExpressions.Regex]::Match($assemblyinfo_version, "^[0-9]+(\.[0-9]+){1,3}$");   
     if($r.Success -eq $false) {
@@ -241,7 +244,7 @@ function Update-AllAssemblyInfoFiles ([string] $sourcePath,  [string] $assemblyi
     
   foreach ($file in "AssemblyInfo.cs", "AssemblyInfo.vb" ) 
   {  
-    get-childitem -recurse |? {$_.Name -eq $file} | Update-SourceVersion $assemblyinfo_version ;
+    get-childitem -recurse |? {$_.Name -eq $file} | Update-SourceVersion $assemblyinfo_version $assemblyinfo_informationalversion;
   }
 
   cd $oldDir
