@@ -7,7 +7,7 @@
     <summary>Powershell build and deployment utilities</summary>
     <description>Edamame provides powershell functions for common build and deployment tasks. Designed to be used as a plugin with Psake</description>
     <iconUrl>https://github.com/flimble/edamame/raw/master/docs/logo/edamameicon.png</iconUrl>
-    <licenseUrl>https://github.com/flimble/edamame/raw/master/license.md</licenseUrl>
+    <licenseUrl>https://github.com/flimble/edamame/blob/master/license.md</licenseUrl>
     <tags>powershell psake build deploy</tags>
     <authors>flimble</authors>
   </metadata>

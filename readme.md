@@ -1,4 +1,4 @@
-![Edamame Logo](https://github.com/flimble/edamame/raw/master/docs/logo/edamamelogo.png "Edamame") # Edamame 
+# ![Edamame Logo](https://github.com/flimble/edamame/raw/master/docs/logo/edamamelogo.png "Edamame") Edamame 
 
 Powershell functions for common build and deployment tasks. Designed to be used as a plugin with Psake
 
