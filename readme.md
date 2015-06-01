@@ -1,6 +1,5 @@
-Edamame (Build utility library for Psake) 
+Edamame ![Edamame Logo](https://github.com/flimble/edamame/raw/master/docs/logo/edamamelogo.png "Edamame")
 =======
-[![Edamame Logo](https://github.com/flimble/edamame/raw/master/docs/logo/edamamelogo.png "Edamame")]
 
 Powershell functions for common build and deployment tasks. Designed to be used as a plugin with Psake
 
