@@ -10,6 +10,18 @@ Type the following in the command line:
 Install-Package Edamame
 ```
 
+# Features
+- Versioning
+- Config replacement
+- Database migration
+- Remote utilities
+- IIS management
+- SQL
+- TeamCity reporting
+
+
+
+
 # Source Requirements
 * PowerShell 2.0+
   
