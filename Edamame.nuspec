@@ -2,12 +2,14 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>Edamame</id>
-    <version>1.0.0.19</version>
+    <version>1.0.0.20</version>
    <title>Edamame</title>
     <summary>Powershell build and deployment utilities</summary>
     <description>Edamame provides powershell functions for common build and deployment tasks. Designed to be used as a plugin with Psake</description>
+    <iconUrl>https://github.com/flimble/edamame/raw/master/docs/logo/edamameicon.png</iconUrl>
+    <licenseUrl>https://github.com/flimble/edamame/raw/master/license.md</licenseUrl>
     <tags>powershell psake build deploy</tags>
-    <authors>John Fattal</authors>
+    <authors>flimble</authors>
   </metadata>
   <files>
     <file src="scripts\*.psm1" target="tools" />
