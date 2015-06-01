@@ -1,0 +1,4 @@
+language: powershell
+
+script:
+ - build.bat
